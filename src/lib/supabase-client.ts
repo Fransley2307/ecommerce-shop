@@ -1,6 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://tcgxsxunwvjhjdbljepc.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZ3hzeHVud3ZqaGpkYmxqZXBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NjE3NjMsImV4cCI6MjA3MTEzNzc2M30.yrOx8ug8IblFYm8etTEvGkn5x6D58jbhDt0EDkLfD4c';
+// Use Vite environment variables (must start with VITE_ to be exposed to the client)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+	// Log a clear warning in development if env vars are missing
+	// Avoid throwing here to let the app boot for non-supabase flows
+	// (but the app will fail when attempting supabase requests)
+	// eslint-disable-next-line no-console
+	console.warn('[supabase-client] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is not defined. Create a .env with these values.');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

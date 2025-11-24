@@ -1,84 +1,78 @@
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { ProductDTO } from "../dtos/product.dto";
-import { useCart } from "@/cases/cart/context/cart-context";
-import { FavoriteButton } from "@/cases/favorites/components/favorite-button";
-import { useFavorites, useToggleFavorite } from "@/cases/favorites/hooks/use-favorite";
-import { useCurrentCustomer } from "@/cases/customers/hooks/use-customer";
-import { useCanRateProduct, useProductReviews } from "@/cases/reviews/hooks/use-review";
-import { RatingStars } from "@/cases/reviews/components/rating-stars";
-import { AverageStars } from "@/cases/reviews/components/avarage-stars";
+import { FormattedNumber, IntlProvider } from 'react-intl';
+import { useCart } from "@/contexts/cart-context";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
-interface ProductCardProps {
-  product: ProductDTO;
+type ProductCardProps = {
+    product: ProductDTO
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { customer } = useCurrentCustomer();
-  const { addToCart } = useCart();
-  const { data: favs } = useFavorites(customer?.id!);
-  const toggle = useToggleFavorite(customer?.id!);
-  const { data: reviews } = useProductReviews(product.id!);
-  const canRate = useCanRateProduct(product.id!);
+    const { addToCart } = useCart();
 
-  const favoriteIds = favs?.map(f => f.product.id).filter((id): id is string => typeof id === "string") ?? [];
-  const average = reviews && reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length : 0;
+    function handleAddToCart() {
+        addToCart({
+            id: product.id ?? "",
+            name: product.name,
+            price: product.price,
+            image: (product as any).image ?? "",
+            quantity: 1,
+        });
+    }
 
-  return (
-    <Card className="flex flex-col justify-between h-full hover:shadow-lg transition-all duration-200">
-      <div>
-          <CardHeader>
-          <div className="flex justify-between items-start">
-              <h2 className="text-lg font-semibold">{product.name}</h2>
+    return (
+        <Card>
+            <CardHeader>
+                <Link to={`/product/${product.id}`}>
+                    {product.image ? (
+                        <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-48 object-cover rounded-md"
+                        />
+                    ) : (
+                        <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                            Sem imagem
+                        </div>
+                    )}
+                </Link>
+            </CardHeader>
 
-              <FavoriteButton productId={product.id!}
-                              favorites={favoriteIds}
-                              toggle={(productId) => toggle.mutate(productId)}/>
-          </div>
+            <CardContent>
+                <Link to={`/product/${product.id}`}>
+                    <h4 className="font-semibold text-lg">{product.name}</h4>
+                </Link>
 
-          <div className="flex items-center gap-2 mb-2">
-              <AverageStars rating={average} />
-              <span className="text-xs text-gray-500">
-                {reviews?.length ?? 0} {reviews?.length === 1 ? 'avaliação' : 'avaliações'}
-              </span>
-          </div>
-        </CardHeader>
+                <div className="w-full flex flex-col mt-2 gap-1">
+                    <p>
+                        <IntlProvider locale="pt-BR">
+                            <FormattedNumber value={product.price} style="currency" currency="BRL"/> Kg
+                        </IntlProvider>
+                    </p>
+                    <p>
+                        <IntlProvider locale="pt-BR">
+                            <FormattedNumber value={product.price} style="currency" currency="BRL"/> em 10x de 
+                            <FormattedNumber value={product.price / 10} style="currency" currency="BRL"/>
+                        </IntlProvider>
+                    </p>
+                    <p>
+                        ou
+                        <IntlProvider locale="pt-BR">
+                            <FormattedNumber value={product.price * 0.9} style="currency" currency="BRL"/>
+                        </IntlProvider>
+                        no PIX
+                    </p>
+                </div>
 
-        <CardContent>
-          {
-            product.description ? 
-              (<p className="text-sm text-gray-600 mb-2">{product.description}</p>) 
-            : 
-              (<div className="mb-6" />)
-          }
-
-          <div className="flex flex-col">
-            <span className="font-bold text-lg text-green-600 mb-2">
-              R$ {product.price}
-            </span>
-
-            <span className="text-xs text-gray-500">
-              Categoria: {product.category?.name ?? "Sem categoria"}
-            </span>
-          </div>
-
-          {
-            canRate && 
-            (
-              <div className="flex items-center gap-2 mt-6">
-                <span className="text-xs font-medium text-gray-600">Avaliar:</span> 
-                <RatingStars product={product} />
-              </div>
-            )
-          }
-        </CardContent>
-      </div>
-
-      <CardFooter className="mt-auto">
-        <Button className="w-full cursor-pointer" onClick={() => addToCart({...product, quantity: 1})}>
-          Adicionar ao carrinho
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+                <Button
+                    className="mt-4 w-full"
+                    onClick={handleAddToCart}
+                >
+                    Adicionar ao carrinho
+                </Button>
+            </CardContent>
+        </Card>
+    )
 }
