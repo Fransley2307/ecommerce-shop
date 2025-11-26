@@ -121,32 +121,42 @@ export function OrdersPage() {
               </div>
 
               {/* Endereço */}
-              <div className="bg-gray-50 p-4 rounded text-sm text-gray-700">
-                <p className="font-semibold mb-2">Endereço de Entrega:</p>
-                <p>
-                  {/* @ts-expect-error - Backend OrderDTO structure mismatch */}
-                  {order.address}, {order.city} - {order.state} {order.zipCode}
-                </p>
-              </div>
+              {typeof order.customer !== 'string' && order.customer && (
+                <div className="bg-gray-50 p-4 rounded text-sm mb-4">
+                  <p className="font-semibold mb-2 text-gray-900">Endereço de entrega:</p>
+                  <p className="text-gray-700">
+                    {order.customer.address}
+                  </p>
+                  <p className="text-gray-700">
+                    {typeof order.customer.city !== 'string' && order.customer.city?.name}, CEP: {order.customer.zipcode}
+                  </p>
+                </div>
+              )}
 
               {/* Items */}
               {order.items && order.items.length > 0 && (
                 <div className="mt-4">
                   <p className="font-semibold mb-2">Itens:</p>
-                  <ul className="space-y-1 text-sm">
+                  <ul className="space-y-2">
                     {order.items.map((item, idx) => {
-                      // @ts-expect-error - Backend OrderItemDTO structure mismatch
-                      const price = item.unitPrice;
+                      const productName = typeof item.product === 'string' 
+                        ? 'R$ NaN' 
+                        : item.product.name;
+                      
                       return (
-                        <li key={idx} className="text-gray-700">
-                          • {item.quantity}x -{" "}
-                          <IntlProvider locale="pt-BR">
-                            <FormattedNumber
-                              value={price}
-                              style="currency"
-                              currency="BRL"
-                            />
-                          </IntlProvider>
+                        <li key={idx} className="flex justify-between items-center text-sm bg-gray-50 p-3 rounded">
+                          <span className="text-gray-700">
+                            • {item.quantity} x - {productName}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            <IntlProvider locale="pt-BR">
+                              <FormattedNumber
+                                value={item.value}
+                                style="currency"
+                                currency="BRL"
+                              />
+                            </IntlProvider>
+                          </span>
                         </li>
                       );
                     })}
